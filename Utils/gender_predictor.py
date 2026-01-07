@@ -11,6 +11,7 @@ huggingFace_token = os.getenv("HF_TOKEN")
 
 
 def predict_gender(img):
+    
     client = InferenceClient(
         provider="hf-inference",
         api_key=huggingFace_token,
