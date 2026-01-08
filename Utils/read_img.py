@@ -1,40 +1,31 @@
 import os
-from fastapi import UploadFile
-import aiofiles
 import uuid
+import base64
 
-async def save_upload_file(uploaded_file: UploadFile) -> str:
+async def save_upload_file(img_base64: str) -> str:
     """
-    Asynchronously saves an uploaded file to a local temporary directory 
-    in chunks and returns the file path.
+    Converts a Base64 string to a temporary file and returns the file path.
     """
-    
-    # 1. Setup Directory
+
+    # 1. Remove prefix if present
+    if "," in img_base64:
+        img_base64 = img_base64.split(",")[1]
+
+    # 2. Decode Base64
+    try:
+        img_bytes = base64.b64decode(img_base64)
+    except Exception as e:
+        raise ValueError(f"Failed to decode Base64 image: {e}")
+
+    # 3. Save to temp folder
     temp_dir = "temp_uploads"
     os.makedirs(temp_dir, exist_ok=True)
-    
-    # 2. Create a unique filename - Using a UUID prevents name collisions and improves security
-    file_extension = os.path.splitext(uploaded_file.filename)[1]
-    unique_filename = f"{uuid.uuid4()}{file_extension}"
+    unique_filename = f"{uuid.uuid4()}.png"  # always save as PNG
     file_path = os.path.join(temp_dir, unique_filename)
 
-    # 3. Write file in binary chunks (Non-blocking I/O)
     try:
-        async with aiofiles.open(file_path, 'wb') as out_file:
-            # Read and write chunks to prevent loading huge files into memory - 1024 * 1024 bytes (1MB) is a good chunk size
-            while content := await uploaded_file.read(1024 * 1024):
-                await out_file.write(content)
-        
-        # 4. Return the path
+        with open(file_path, "wb") as f:
+            f.write(img_bytes)
         return file_path
-        
     except Exception as e:
-        print(f"Error saving file: {e}")
-        # Clean up the file if an error occurred during writing
-        if os.path.exists(file_path):
-            os.remove(file_path)
-        raise
-    
-    finally:
-        # Always close the UploadFile object
-        await uploaded_file.close()
+        raise IOError(f"Failed to save image: {e}")

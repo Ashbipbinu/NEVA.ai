@@ -1,4 +1,4 @@
-def prompt_selector(gender, theme, opt_text=''):
+def prompt_selector(gender, theme, opt_text=' '):
     
     gender_based_prompts = {
         "male": f"""A realistic cinematic video generated from the provided image of a male subject.
