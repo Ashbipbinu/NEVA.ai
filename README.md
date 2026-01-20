@@ -87,7 +87,7 @@ cd NEVA.ai
 
 3. Start the frontend server:
 
-    npm start
+    npm run dev <br>
     Frontend URL: http://localhost:3000
 
 ## How to Use the Application
