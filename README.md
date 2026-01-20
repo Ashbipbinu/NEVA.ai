@@ -94,34 +94,34 @@ cd NEVA.ai
 
 Follow the steps below to generate a video using NEVA.ai:
 
-1. Open the application in your browser.
-    You will see a live preview from your webcam.
+1. Open the application in your browser. <br>
+    You will see a live preview from your webcam. <br>
 
-2. Capture an image
+2. Capture an image <br>
 
-    Click the Capture button to take a photo using the webcam.
-    If you are not satisfied, click Retake to capture the image again.
+    Click the Capture button to take a photo using the webcam. <br>
+    If you are not satisfied, click Retake to capture the image again. <br>
 
-3. Select a theme
+3. Select a theme <br>
     Choose a video theme from the dropdown menu (e.g., Festive, Avatar, Cartoonify, etc.).
 
-4. Enter an optional prompt
-    You may provide additional text input to guide the video generation.
-    This step is optional, as the backend already applies prompt engineering.
+4. Enter an optional prompt <br>
+    You may provide additional text input to guide the video generation. <br>
+    This step is optional, as the backend already applies prompt engineering. <br>
 
-5. Generate the video
-    Click the Generate button to start processing.
-    Please wait for a few moments while the AI model generates the video.
+5. Generate the video <br>
+    Click the Generate button to start processing. <br>
+    Please wait for a few moments while the AI model generates the video.<br>
 
-6. View the result
-    A modal window will appear once the video is ready.
-    You can play and preview the generated video inside the modal.
+6. View the result <br>
+    A modal window will appear once the video is ready. <br>
+    You can play and preview the generated video inside the modal. <br>
 
-7. Download or share the video
-    Click the Download button to save the video locally.
-    A QR code is also provided to view the video on your mobile device.
+7. Download or share the video <br>
+    Click the Download button to save the video locally. <br>
+    A QR code is also provided to view the video on your mobile device. <br>
 
-Please Note: Ensure that your mobile phone and the application are connected to the same internet network to access the video via QR code.
+Please Note: Ensure that your mobile phone and the application are connected to the same internet network to access the video via QR code. <br>
 
 ## Current Features
 
