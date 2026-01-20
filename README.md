@@ -34,8 +34,6 @@ ReactJS
 
 TailwindCSS
 
-HTML Canvas (for webcam capture)
-
 Axios (API communication)
 
 ### Backend
@@ -44,4 +42,43 @@ Python
 
 FastAPI
 
-Prompt Engineering
+### AI / ML
+
+Hugging Face Models (Gender Detection)
+
+AnimateDiff (Diffusion-based Image-to-Video generation)
+
+## Clone the Repository
+
+git clone https://github.com/Ashbipbinu/NEVA.ai.git
+cd NEVA.ai
+
+## How to Run the Project
+
+### Backend Setup
+1. Create a virtual environment:
+
+conda create -n neva python=3.10 -y
+conda activate neva
+
+2. Install backend dependencies:
+
+pip install -r requirements.txt
+
+3. Create a .env file in the root directory:
+
+HF_API_KEY=your_huggingface_api_key
+
+Please note:- Do not commit the .env file.
+
+4. Start the backend server:
+
+python -m uvicorn main:app --reload --host 0.0.0.0 --port 8000
+
+
+
+## Author
+
+Ashbi P Binu
+Full-Stack & AI Developer
+Project: NEVA.ai
