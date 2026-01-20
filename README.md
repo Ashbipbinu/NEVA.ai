@@ -26,9 +26,9 @@ Image + Prompt → Video Generation
 Generated Video Output
 
 
-# Technologies Used
+## Technologies Used
 
-## Frontend
+### Frontend
 
 ReactJS
 
@@ -38,7 +38,7 @@ HTML Canvas (for webcam capture)
 
 Axios (API communication)
 
-## Backend
+### Backend
 
 Python
 
