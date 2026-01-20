@@ -54,7 +54,7 @@ def serve_video(filename: str):
 
 # This method is used for the processing the image which in turn generates the video
 @app.post('/generate-video')
-async def generate_video(request: VideoRequest):
+async def generate_video(request: VideoRequest): 
         
         img = request.img
         opt_txt = request.opt_txt

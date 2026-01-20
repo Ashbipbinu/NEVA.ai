@@ -50,7 +50,7 @@ AnimateDiff (Diffusion-based Image-to-Video generation)
 
 ## Clone the Repository
 
-git clone https://github.com/Ashbipbinu/NEVA.ai.git
+git clone https://github.com/Ashbipbinu/NEVA.ai.git <br>
 cd NEVA.ai
 
 ## How to Run the Project
