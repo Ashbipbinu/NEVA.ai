@@ -154,6 +154,6 @@ Please Note: Ensure that your mobile phone and the application are connected to 
 
 ## Author
 
-Ashbi P Binu
-Full-Stack & AI Developer
+Ashbi P Binu <br>
+Full-Stack & AI Developer <br>
 Project: NEVA.ai
