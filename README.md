@@ -58,7 +58,7 @@ cd NEVA.ai
 ### Backend Setup
 1. Create a virtual environment:
 
-conda create -n neva python=3.10 -y  /n
+conda create -n neva python=3.10 -y  <br>
 conda activate neva
 
 2. Install backend dependencies:
