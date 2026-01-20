@@ -58,23 +58,58 @@ cd NEVA.ai
 ### Backend Setup
 1. Create a virtual environment:
 
-conda create -n neva python=3.10 -y  <br>
-conda activate neva
+    conda create -n neva python=3.10 -y  <br>
+    conda activate neva
 
 2. Install backend dependencies:
 
-pip install -r requirements.txt
+    pip install -r requirements.txt
 
 3. Create a .env file in the root directory:
 
-HF_API_KEY=your_huggingface_api_key
+    HF_API_KEY=your_huggingface_api_key
 
-Please note:- Do not commit the .env file.
+    Please note:- Do not commit the .env file.
 
 4. Start the backend server:
 
-python -m uvicorn main:app --reload --host 0.0.0.0 --port 8000
+    python -m uvicorn main:app --reload --host 0.0.0.0 --port 8000
 
+### Frontend Setup
+
+1. Navigate to frontend directory:
+
+    cd neva-frontend
+
+2. Install frontend dependencies:
+
+    npm install
+
+3. Start the frontend server:
+
+    npm start
+
+## Current Features
+
+    Real-time webcam image capture
+
+    AI-based gender detection
+
+    Automatic prompt selection
+
+    Image-to-video generation using diffusion models
+
+    Video preview and download
+
+## Future Enhancements
+
+    Higher resolution video output
+
+    Additional video themes
+
+    Cloud storage integration
+
+    Mobile application support
 
 
 ## Author
