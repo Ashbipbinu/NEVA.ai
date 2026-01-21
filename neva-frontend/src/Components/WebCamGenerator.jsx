@@ -8,6 +8,7 @@ import VideoPreviewModal from "./VideoPreviewModal";
 import { motion, AnimatePresence } from "framer-motion";
 
 export default function WebcamGenerator() {
+  
   const webcamRef = useRef(null);
   const [theme, setTheme] = useState("");
   const [text, setText] = useState("");
@@ -220,7 +221,7 @@ export default function WebcamGenerator() {
                 </motion.button>
               ) : !isFlipped ? (
                 /* STATE 2: Captured - Recapture & Proceed */
-                <motion.div key="btn-group" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex gap-4">
+                <motion.div key="btn-group" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration : 0.9 }} className="flex gap-4">
                   <motion.button
                     whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
                     onClick={handleRecapture}
