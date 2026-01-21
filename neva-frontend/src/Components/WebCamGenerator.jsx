@@ -1,54 +1,42 @@
 import { useRef, useState, useEffect } from "react";
 import Webcam from "react-webcam";
-import { FaCamera, FaRedo, FaTimes } from "react-icons/fa";
+import { FaCamera, FaRedo, FaArrowRight, FaArrowLeft } from "react-icons/fa";
 import { RingLoader } from "react-spinners";
 import toast, { Toaster } from "react-hot-toast";
-import QRCode from "react-qr-code";
 import api from "../Axios/axiosInstance";
 import VideoPreviewModal from "./VideoPreviewModal";
+import { motion, AnimatePresence } from "framer-motion";
 
 export default function WebcamGenerator() {
   const webcamRef = useRef(null);
-
   const [theme, setTheme] = useState("");
   const [text, setText] = useState("");
   const [capturedImage, setCapturedImage] = useState(null);
+  const [isFlipped, setIsFlipped] = useState(false); 
   const [isLoading, setIsLoading] = useState(false);
   const [countdown, setCountdown] = useState(null);
   const [cameraPermission, setCameraPermission] = useState(false);
+  const [cameraReady, setCameraReady] = useState(false);
   const [showModal, setShowModal] = useState(false);
-  const [videoUrl, setVideoUrl] = useState(""); // Store video URL returned from backend
+  const [videoUrl, setVideoUrl] = useState("");
 
-  // Check for camera permission on mount
   useEffect(() => {
     navigator.mediaDevices
       .getUserMedia({ video: true })
       .then(() => setCameraPermission(true))
-      .catch(() => {
-        setCameraPermission(false);
-        toast.error("Camera permission is required!");
-      });
+      .catch(() => toast.error("Camera permission is required!"));
   }, []);
 
-  const startCapture = () => {
-    if (!cameraPermission) {
-      toast.error("Camera permission denied!");
-      return;
-    }
+  /* ================= LOGIC HANDLERS ================= */
 
-    if (capturedImage) {
-      // Retake
-      setCapturedImage(null);
-      return;
-    }
-
+  const startCountdown = () => {
+    if (!cameraPermission) return toast.error("Camera permission denied!");
     setCountdown(3);
-
     const interval = setInterval(() => {
       setCountdown((prev) => {
-        if (prev === 1) {
+        if (prev > 0 && prev === 1) {
           clearInterval(interval);
-          capturePhoto();
+          handleScreenshot();
           return null;
         }
         return prev - 1;
@@ -56,147 +44,206 @@ export default function WebcamGenerator() {
     }, 1000);
   };
 
-  const capturePhoto = () => {
-    const imageSrc = webcamRef.current.getScreenshot();
-    if (!imageSrc) {
-      toast.error("Failed to capture photo! Check your camera.");
-      return;
+  const handleScreenshot = () => {
+    if (webcamRef.current) {
+      const imageSrc = webcamRef.current.getScreenshot();
+      if (imageSrc) setCapturedImage(imageSrc);
     }
-    setCapturedImage(imageSrc);
+  };
+
+  const handleRecapture = () => {
+    setCapturedImage(null);
+    setCameraReady(false);
+    setIsFlipped(false);
+  };
+
+  const handleProceed = () => {
+    setIsFlipped(true);
   };
 
   const handleGenerate = async () => {
-    // Validation
-    if (!capturedImage && !theme) {
-      toast.error("Image and theme are required!");
-      return;
-    }
-    if (!capturedImage) {
-      toast.error("Please capture a photo first!");
-      return;
-    }
-    if (!theme) {
-      toast.error("Please select a theme!");
-      return;
-    }
-
+    if (!capturedImage || !theme) return toast.error("Please select a theme!");
     try {
-      const payload = {
-        img: capturedImage,
-        theme: theme,
-        opt_txt: text,
-      };
-
       setIsLoading(true);
-      const response = await api.post("/generate-video", payload);
-
-      const { video_url } = response.data;
-      setVideoUrl(video_url);
+      const response = await api.post("/generate-video", { img: capturedImage, theme, opt_txt: text });
+      setVideoUrl(response.data.video_url);
       setShowModal(true);
-      toast.success("Video generated successfully!");
-    } catch (error) {
-      console.error(error);
-      toast.error("Failed to call backend API!");
+    } catch {
+      toast.error("Generation failed!");
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleDownload = () => {
+  const handleDownload = async () => {
     if (!videoUrl) return;
-    const link = document.createElement("a");
-    link.href = videoUrl;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+
+    try {
+      toast.loading("Preparing download...");
+      const response = await fetch(videoUrl);
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      
+      const link = document.createElement("a");
+      link.href = url;
+      // Set a filename (e.g., NEVA_Video_17123456.mp4)
+      link.setAttribute("download", `NEVA_AI_Video_${Date.now()}.mp4`);
+      
+      document.body.appendChild(link);
+      link.click();
+      
+      // Cleanup
+      link.parentNode.removeChild(link);
+      window.URL.revokeObjectURL(url);
+      toast.dismiss();
+      toast.success("Download started!");
+    } catch (error) {
+      toast.dismiss();
+      toast.error("Download failed. Please try again.");
+      console.error("Download error:", error);
+    }
   };
 
   return (
-    <div className="min-h-screen bg-gray-950 text-white flex items-center justify-center px-6">
-      <div className="w-full max-w-md space-y-6">
-        {/* Webcam / Captured Image Box */}
-        <div className="bg-gray-900 p-4 rounded-2xl shadow-lg relative">
-          {!capturedImage ? (
-            <Webcam
-              ref={webcamRef}
-              audio={false}
-              screenshotFormat="image/jpeg"
-              className="rounded-xl w-full"
-            />
-          ) : (
-            <img
-              src={capturedImage}
-              alt="Captured"
-              className="rounded-xl w-full"
-              name="img"
-            />
-          )}
-
-          {countdown && (
-            <div className="absolute inset-0 flex items-center justify-center bg-black/60 rounded-2xl">
-              <span className="text-6xl font-bold">{countdown}</span>
+    <motion.div className="min-h-screen bg-gray-950 text-white flex items-center justify-center px-6 overflow-hidden">
+      <motion.div className="w-full max-w-md">
+        
+        <div className="relative w-full h-135" style={{ perspective: "1200px" }}>
+          <motion.div
+            className="w-full h-full relative"
+            animate={{ rotateY: isFlipped ? 180 : 0 }}
+            transition={{ duration: 0.7, type: "spring", stiffness: 100, damping: 20 }}
+            style={{ transformStyle: "preserve-3d" }}
+          >
+            
+            {/* --- FRONT SIDE: CAMERA & PREVIEW --- */}
+            <div 
+              className="absolute inset-0 w-full h-full bg-gray-900 rounded-[40px] p-4 shadow-2xl border border-gray-800"
+              style={{ backfaceVisibility: "hidden" }}
+            >
+              <div className="relative w-full h-full rounded-[28px] overflow-hidden bg-black flex items-center justify-center">
+                <AnimatePresence mode="wait">
+                  {!capturedImage ? (
+                    <motion.div 
+                      key="camera-mode"
+                      initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                      className="w-full h-full"
+                    >
+                      {!cameraReady && (
+                        <div className="absolute inset-0 flex flex-col items-center justify-center bg-gray-900 z-10">
+                          <RingLoader size={45} color="#6366f1" />
+                        </div>
+                      )}
+                      <Webcam
+                        key="webcam-component"
+                        ref={webcamRef}
+                        audio={false}
+                        screenshotFormat="image/jpeg"
+                        onUserMedia={() => setCameraReady(true)}
+                        className="w-full h-full object-cover"
+                      />
+                    </motion.div>
+                  ) : (
+                    <motion.img 
+                      key="preview-mode"
+                      src={capturedImage}
+                      initial={{ scale: 1.1, opacity: 0 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      className="w-full h-full object-cover"
+                    />
+                  )}
+                </AnimatePresence>
+                
+                {countdown && (
+                  <div className="absolute inset-0 flex items-center justify-center bg-black/40 backdrop-blur-sm z-20">
+                    <motion.span key={countdown} initial={{ scale: 1.2 }} animate={{ scale: 0.5 }} className="text-9xl font-black">
+                      {countdown}
+                    </motion.span>
+                  </div>
+                )}
+              </div>
             </div>
-          )}
 
-          <button
-            onClick={startCapture}
-            className="absolute bottom-4 left-1/2 -translate-x-1/2 w-16 h-16 bg-indigo-600 hover:bg-indigo-700 rounded-full shadow-lg flex items-center justify-center transition transform hover:scale-110"
-            title={capturedImage ? "Retake" : "Capture"}
-          >
-            {capturedImage ? (
-              <FaRedo className="w-6 h-6" />
-            ) : (
-              <FaCamera className="w-6 h-6" />
-            )}
-          </button>
+            {/* --- BACK SIDE: FORM --- */}
+            <div 
+              className="absolute inset-0 w-full h-full bg-gray-900 rounded-[40px] p-8 shadow-2xl border border-indigo-500/30 flex flex-col justify-between"
+              style={{ backfaceVisibility: "hidden", transform: "rotateY(180deg)" }}
+            >
+              <div className="space-y-6">
+                <div className="flex justify-between items-center">
+                  <h2 className="text-2xl font-bold bg-linear-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent">NEVA.ai</h2>
+                  <button onClick={() => setIsFlipped(false)} className="p-2 bg-gray-800 rounded-full hover:bg-gray-700">
+                    <FaArrowLeft className="text-sm" />
+                  </button>
+                </div>
+                <div className="space-y-4">
+                  <select
+                    value={theme}
+                    onChange={(e) => setTheme(e.target.value)}
+                    className="w-full p-4 rounded-2xl bg-gray-800 border border-gray-700 outline-none"
+                  >
+                    <option value="">Select Theme</option>
+                    <option value="cyberpunk">Cyberpunk</option>
+                    <option value="cinematic">Cinematic</option>
+                    <option value="fantasy">Fantasy</option>
+                  </select>
+                  <textarea
+                    placeholder="Describe details... (Optional)"
+                    value={text}
+                    onChange={(e) => setText(e.target.value)}
+                    className="w-full p-4 h-50 rounded-2xl bg-gray-800 border border-gray-700 outline-none resize-none"
+                  />
+                </div>
+              </div>
+              <motion.button onClick={handleGenerate} whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }} disabled={isLoading} className="w-full py-4 rounded-2xl hover:bg-indigo-500 cursor-pointer bg-indigo-600 font-bold text-lg shadow-lg shadow-indigo-500/20 transition-all active:scale-95 flex justify-center items-center">
+                {isLoading ? <RingLoader size={24} color="white" /> : "Generate"}
+              </motion.button>
+            </div>
+          </motion.div>
+
+          {/* --- DYNAMIC BUTTONS --- */}
+          <div className="absolute bottom-12 left-1/2 -translate-x-1/2 w-full flex justify-center items-center gap-4 z-50">
+            <AnimatePresence mode="wait">
+              {!capturedImage ? (
+                /* STATE 1: Initial Camera */
+                <motion.button
+                  key="btn-capture"
+                  disabled={ countdown && countdown >= 1}
+                  whileHover={{ scale: 1.05 }} 
+                  whileTap={{ scale: 0.95 }}
+                  initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, scale: 0.5 }}
+                  onClick={startCountdown}
+                  className="w-20 h-20 bg-indigo-600 rounded-full border-[6px] border-gray-950 flex items-center justify-center shadow-lg shadow-indigo-500/40"
+                >
+                  { countdown >=1  ? <RingLoader/> : <FaCamera className="text-xl"/>}
+                </motion.button>
+              ) : !isFlipped ? (
+                /* STATE 2: Captured - Recapture & Proceed */
+                <motion.div key="btn-group" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex gap-4">
+                  <motion.button
+                    whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
+                    onClick={handleRecapture}
+                    className="px-6 py-4 bg-gray-800 rounded-2xl border border-gray-700 flex items-center gap-2 font-bold"
+                  >
+                    <FaRedo className="text-sm" /> Recapture
+                  </motion.button>
+                  <motion.button
+                    whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
+                    onClick={handleProceed}
+                    className="px-8 py-4 bg-indigo-600 rounded-2xl flex items-center gap-2 font-bold shadow-lg shadow-indigo-500/30"
+                  >
+                    Proceed <FaArrowRight className="text-sm" />
+                  </motion.button>
+                </motion.div>
+              ) : null}
+            </AnimatePresence>
+          </div>
         </div>
 
-        {/* Controls */}
-        <div className="bg-gray-900 p-4 rounded-2xl shadow-lg space-y-3">
-          <select
-            value={theme}
-            onChange={(e) => setTheme(e.target.value)}
-            className="w-full p-3 rounded-lg bg-gray-800 text-white outline-none"
-            name="theme"
-          >
-            <option value="">Select Theme</option>
-            <option value="cyberpunk">Cyberpunk</option>
-            <option value="cinematic">Cinematic</option>
-            <option value="fantasy">Fantasy</option>
-            <option value="anime">Anime</option>
-          </select>
-
-          <input
-            type="text"
-            placeholder="Optional prompt..."
-            value={text}
-            onChange={(e) => setText(e.target.value)}
-            className="w-full p-3 rounded-lg bg-gray-800 text-white outline-none"
-            name="opt_txt"
-          />
-
-          <button
-            onClick={handleGenerate}
-            className="w-full py-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 font-semibold transition flex justify-center items-center"
-          >
-            {isLoading ? (
-              <RingLoader size={17} color="white" speedMultiplier={2} />
-            ) : (
-              "Generate"
-            )}
-          </button>
-        </div>
-
-        {/* Toast Container */}
         <Toaster position="top-right" />
-
-        <VideoPreviewModal
-          open={showModal}
-          videoUrl={videoUrl}
-          onClose={() => setShowModal(false)}
-          onDownload={handleDownload}
-        />
-      </div>
-    </div>
+        <VideoPreviewModal open={showModal} videoUrl={videoUrl} onClose={() => setShowModal(false)} onDownload={handleDownload}/>
+      </motion.div>
+    </motion.div>
   );
 }

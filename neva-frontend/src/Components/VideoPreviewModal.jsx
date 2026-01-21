@@ -1,5 +1,6 @@
 import { FaTimes } from "react-icons/fa";
 import QRCode from "react-qr-code";
+import { motion, AnimatePresence } from "framer-motion";
 
 export default function VideoPreviewModal({
   open,
@@ -7,82 +8,97 @@ export default function VideoPreviewModal({
   onClose,
   onDownload,
 }) {
-  if (!open) return null;
+  // We remove the "if (!open) return null" here because AnimatePresence 
+  // needs to see the children to animate their exit.
 
   let mobileVideoUrl = videoUrl;
-  console.log(videoUrl)
-  if (videoUrl) {
-    // Replace localhost or 127.0.0.1 with your PC's local IP
-    const localIP = "192.168.1.240"; // <-- replace with your PC's actual IP
-    mobileVideoUrl = videoUrl
-  }
 
   return (
-    <div
-      className="fixed inset-0 bg-black/70 flex items-center justify-center z-50"
-      onClick={onClose}
-    >
-      {/* Modal Container */}
-      <div
-        className="bg-gray-950 rounded-2xl p-6 w-3xl h-100 relative flex"
-        onClick={(e) => e.stopPropagation()}
-      >
-        {/* Close Button */}
-        <button
+    <AnimatePresence>
+      {open && (
+        /* Backdrop */
+        <motion.div
+          className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 px-4"
           onClick={onClose}
-          className="absolute top-4 right-4 text-gray-400 hover:text-white transition"
-          aria-label="Close modal"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }} // Fade out backdrop
+          transition={{ duration: 0.3 }}
         >
-          <FaTimes size={20} />
-        </button>
+          {/* Modal Container */}
+          <motion.div
+            className="bg-gray-950 rounded-4xl p-8 w-full max-w-4xl relative flex flex-col md:flex-row gap-6 border border-gray-800"
+            onClick={(e) => e.stopPropagation()}
+            initial={{ scale: 0.9, opacity: 0, y: 20, rotateX: -10 }}
+            animate={{ scale: 1, opacity: 1, y: 0, rotateX: 0 }}
+            exit={{ 
+              scale: 0.8, 
+              opacity: 0, 
+              y: 100, 
+              rotateX: 10,
+              transition: { duration: 0.3, ease: "easeIn" } 
+            }} // "Drop and shrink" exit effect
+            transition={{ type: "spring", damping: 25, stiffness: 300 }}
+          >
+            {/* Close Button */}
+            <button
+              onClick={onClose}
+              className="absolute top-3 right-3 p-0.5  bg-gray-900 rounded-full text-gray-400 hover:text-white hover:bg-red-500 transition-all z-10"
+              aria-label="Close modal"
+            >
+              <FaTimes size={18} />
+            </button>
 
-        {/* Video Section */}
-        <div className="w-full p-3">
-          <div className="w-full bg-gray-900 rounded-2xl shadow-lg p-4 flex items-center justify-center">
-            {videoUrl ? (
-              <video
-                src={videoUrl}
-                controls
-                autoPlay
-                className="w-full rounded-xl max-h-100 object-contain"
-              />
-            ) : (
-              <div className="w-full h-62 flex items-center justify-center text-gray-400">
-                Video will appear here
+            {/* Video Section */}
+            <motion.div
+              className="flex-[1.5]"
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -10 }} // Slide left on exit
+            >
+              <div className="w-full h-full bg-black rounded-2xl shadow-2xl overflow-hidden flex items-center justify-center border border-gray-800">
+                {videoUrl ? (
+                  <video
+                    src={videoUrl}
+                    controls
+                    autoPlay
+                    className="w-full h-full object-contain"
+                  />
+                ) : (
+                  <div className="text-gray-500 italic">Processing video...</div>
+                )}
               </div>
-            )}
-          </div>
-        </div>
+            </motion.div>
 
-        {/* QR Code Section */}
-        <div className="w-1/2 p-3">
-          <div className="w-full bg-gray-900 rounded-2xl shadow-lg p-4 flex flex-col items-center justify-center">
-            {videoUrl ? (
-              <>
-                <p className="mb-3 text-sm text-gray-300">
-                  Scan to view / download video
+            {/* Side Panel (QR & Actions) */}
+            <motion.div
+              className="flex-1 flex flex-col items-center justify-center gap-6"
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: 10 }} // Slide right on exit
+            >
+              <div className="bg-gray-900 w-full p-6 rounded-2xl border border-gray-800 flex flex-col items-center text-center">
+                <p className="mb-4 text-sm font-medium text-gray-400">
+                  Scan to share
                 </p>
-                <div className="bg-white p-3 rounded-xl">
-                  <QRCode value={mobileVideoUrl} size={160} />
+                <div className="bg-white p-3 rounded-xl shadow-white/5 shadow-xl">
+                  <QRCode value={mobileVideoUrl || ""} size={140} />
                 </div>
-              </>
-            ) : (
-              <div className="w-full h-62 flex items-center justify-center text-gray-400">
-                QR code will appear here
               </div>
-            )}
-          </div>
-        </div>
 
-        {/* Download Button */}
-        <button
-          onClick={onDownload}
-          disabled={!videoUrl}
-          className="w-1/2 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 disabled:bg-gray-600 font-semibold transition flex justify-center items-center absolute bottom-5 left-[25%]"
-        >
-          Download
-        </button>
-      </div>
-    </div>
+              <motion.button
+                onClick={onDownload}
+                disabled={!videoUrl}
+                className="w-full py-4 rounded-2xl cursor-pointer bg-indigo-600 hover:bg-indigo-500 disabled:bg-gray-800 font-bold text-lg shadow-lg shadow-indigo-500/20 transition-all active:scale-95 flex justify-center items-center"
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+              >
+                Download Video
+              </motion.button>
+            </motion.div>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
   );
 }
